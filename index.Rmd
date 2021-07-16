@@ -1,0 +1,79 @@
+---
+title: "El junco de los páramos (Junco Vulcani)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r carga-paquetes, message=FALSE, warning=FALSE}
+# Carga de paquetes
+library(dplyr)
+library(sf)
+library(DT)
+library(plotly)
+library(leaflet)
+library(flexdashboard)
+```
+
+```{r carga-datos}
+# Registros de presencia de Junco vulcani
+junco_vulcani <-
+  st_read(
+    "https://raw.githubusercontent.com/gf0604-procesamientodatosgeograficos/2021i-datos/main/gbif/junco_vulcani-cr-registros.csv",
+    options = c(
+      "X_POSSIBLE_NAMES=decimalLongitude",
+      "Y_POSSIBLE_NAMES=decimalLatitude"
+    ),
+    quiet = TRUE
+  )
+
+# Asignación de CRS
+st_crs(junco_vulcani) = 4326
+
+# Capa geespacial de cantones
+cantones <-
+  st_read(
+    "https://raw.githubusercontent.com/gf0604-procesamientodatosgeograficos/2021i-datos/main/ign/delimitacion-territorial-administrativa/cr_cantones_simp_wgs84.geojson",
+    quiet = TRUE
+  )
+```
+
+```{r cruce-cantones, message=FALSE}
+# Cruce espacial con la tabla de cantones, para obtener el nombre del cantón
+junco_vulcani <- 
+  junco_vulcani %>%
+  st_join(cantones["canton"])
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Registros de presencia
+
+```{r tabla-registros}
+# Tabla de registros de presencia
+junco_vulcani %>%
+  st_drop_geometry() %>%
+  select(stateProvince, canton, locality, eventDate) %>%
+  datatable(
+    colnames = c("Provincia", "Cantón", "Localidad", "Fecha"),
+    options = list(searchHighlight = TRUE)
+  )
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
