@@ -46,6 +46,9 @@ junco_vulcani <-
   st_join(cantones["canton"])
 ```
 
+Registros de presencia, estacionalidad e historial
+=======================================================================
+
 Column {data-width=650}
 -----------------------------------------------------------------------
 
@@ -65,15 +68,94 @@ junco_vulcani %>%
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart B
+### Gráfico de Estacionalidad
 
-```{r}
-
+```{r grafico-estacionalidad}
+# Gráfico de estacionalidad
+junco_vulcani %>%
+  st_drop_geometry() %>%
+  group_by(mes = format(as.Date(eventDate, "%Y-%m-%d"), "%m")) %>%
+  summarize(suma_registros = n()) %>%
+  filter(!is.na(mes))  %>%
+  plot_ly(x = ~ mes,
+          y = ~ suma_registros,
+          type="scatter", mode="markers", fill = "tozeroy", fillcolor = "green") %>%
+  layout(title = "Estacionalidad",
+         xaxis = list(title = "Mes"),
+         yaxis = list(title = "Cantidad de registros"))
 ```
 
-### Chart C
+### Gráfico de Historial
 
-```{r}
-
+```{r grafico-historial, warning=FALSE}
+junco_vulcani %>%
+  st_drop_geometry() %>%
+  group_by(anio = format(as.Date(eventDate, "%Y-%m-%d"), "%Y")) %>%
+  summarize(suma_registros = n()) %>%
+  filter(!is.na(anio))  %>%
+  filter(anio >= 2011) %>%
+  plot_ly(x = ~ anio,
+          y = ~ suma_registros,
+          type="bar", color = "green") %>%
+  layout(title = "Historial",
+         xaxis = list(title = "Año"),
+         yaxis = list(title = "Cantidad de registros"))
 ```
+
+Mapa de distribución
+=======================================================================
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+```{r mapa-distribucion}
+# Mapa de registros de presencia
+junco_vulcani %>%
+  select(stateProvince,
+         canton,
+         locality,
+         eventDate,
+         decimalLongitude,
+         decimalLatitude) %>%
+  leaflet() %>%
+  addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
+  addProviderTiles(providers$Stamen.TonerLite, group = "Stamen Toner Lite") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Imágenes de ESRI") %>%
+  addCircleMarkers(
+    stroke = F,
+    radius = 4,
+    fillColor = 'red',
+    fillOpacity = 1,
+    popup = paste(
+      junco_vulcani$stateProvince,
+      junco_vulcani$canton,
+      junco_vulcani$locality,
+      junco_vulcani$eventDate,
+      junco_vulcani$decimalLongitude,
+      junco_vulcani$decimalLatitude,
+      sep = '<br/>'
+    ),
+    group = "Junco vulcani"
+  ) %>%
+  addLayersControl(
+    baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "Imágenes de ESRI"),
+    overlayGroups = c("Junco vulcani")
+  ) %>%
+  addMiniMap(
+    tiles = providers$Stamen.OpenStreetMap.Mapnik,
+    position = "bottomleft",
+    toggleDisplay = TRUE
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
 
